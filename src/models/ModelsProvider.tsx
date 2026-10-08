@@ -11,10 +11,13 @@ import {
 import { download, isRnExecuTorchError } from 'react-native-executorch';
 
 import { CATALOG, findEntry, type CatalogEntry } from './catalog';
+import { loadCatalogSizes } from './remoteSizes';
 import { deleteFile, fileBytes, loadState, saveState } from './storage';
 
 type ModelsContextValue = {
   downloaded: Record<string, number>;
+  sizes: Record<string, number>;
+  sizesLoaded: boolean;
   progress: Record<string, number>;
   errors: Record<string, string>;
   activeId: string | null;
@@ -38,6 +41,8 @@ export function ModelsProvider({ children }: { children: ReactNode }) {
   const [initial] = useState(loadState);
   const [downloaded, setDownloaded] = useState(initial.downloaded);
   const [activeId, setActiveId] = useState(initial.activeId);
+  const [sizes, setSizes] = useState<Record<string, number>>({});
+  const [sizesLoaded, setSizesLoaded] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const controllers = useRef(new Map<string, AbortController>());
@@ -45,6 +50,16 @@ export function ModelsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     saveState({ downloaded, activeId });
   }, [downloaded, activeId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadCatalogSizes(controller.signal, (id, bytes) =>
+      setSizes((prev) => (prev[id] === bytes ? prev : { ...prev, [id]: bytes }))
+    ).then(() => {
+      if (!controller.signal.aborted) setSizesLoaded(true);
+    });
+    return () => controller.abort();
+  }, []);
 
   const startDownload = useCallback(async (id: string) => {
     const entry = findEntry(id);
@@ -112,6 +127,8 @@ export function ModelsProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ModelsContextValue>(
     () => ({
       downloaded,
+      sizes,
+      sizesLoaded,
       progress,
       errors,
       activeId,
@@ -121,7 +138,7 @@ export function ModelsProvider({ children }: { children: ReactNode }) {
       removeModel,
       selectModel,
     }),
-    [downloaded, progress, errors, activeId, startDownload, cancelDownload, removeModel, selectModel]
+    [downloaded, sizes, sizesLoaded, progress, errors, activeId, startDownload, cancelDownload, removeModel, selectModel]
   );
 
   return <ModelsContext.Provider value={value}>{children}</ModelsContext.Provider>;

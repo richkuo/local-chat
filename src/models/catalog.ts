@@ -144,6 +144,6 @@ export function findEntry(id: string | null): CatalogEntry | undefined {
 }
 
 export function formatBytes(bytes: number): string {
-  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
-  return `${Math.max(1, Math.round(bytes / 1024 ** 2))} MB`;
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(2)} GB`;
+  return `${Math.max(1, Math.round(bytes / 1e6))} MB`;
 }

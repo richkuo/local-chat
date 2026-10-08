@@ -6,9 +6,10 @@ import { useTheme } from '@/theme';
 
 export function ModelRow({ entry }: { entry: CatalogEntry }) {
   const theme = useTheme();
-  const { downloaded, progress, errors, activeId, startDownload, cancelDownload, removeModel, selectModel } =
+  const { downloaded, sizes, sizesLoaded, progress, errors, activeId, startDownload, cancelDownload, removeModel, selectModel } =
     useModels();
 
+  const size = sizes[entry.id];
   const bytes = downloaded[entry.id];
   const isDownloaded = bytes !== undefined;
   const percent = progress[entry.id];
@@ -35,9 +36,14 @@ export function ModelRow({ entry }: { entry: CatalogEntry }) {
         ) : null}
       </View>
       <Text style={[styles.meta, { color: theme.secondary }]}>
-        {[entry.maker, entry.variant].filter(Boolean).join(' - ')}
+        {[entry.maker, entry.variant]
+          .filter(Boolean)
+          .join(' - ')}
       </Text>
       <Text style={[styles.description, { color: theme.text }]}>{entry.description}</Text>
+      <Text style={[styles.size, { color: theme.secondary }]}>
+        Size: {size !== undefined ? formatBytes(size) : sizesLoaded ? 'Unavailable' : 'Checking...'}
+      </Text>
 
       {isDownloading ? (
         <View style={styles.progressBlock}>
@@ -116,6 +122,11 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
+    marginTop: 4,
+  },
+  size: {
+    fontSize: 13,
+    fontWeight: '600',
     marginTop: 4,
   },
   progressBlock: {
