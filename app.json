@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.richkuo.local-chat"
@@ -30,7 +30,13 @@
             "deploymentTarget": "17.0"
           }
         }
-      ]
-    ]
+      ],
+      "expo-router",
+      "expo-font"
+    ],
+    "scheme": "localchat",
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
