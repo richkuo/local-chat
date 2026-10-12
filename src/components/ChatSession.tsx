@@ -8,13 +8,11 @@ import type { CatalogEntry } from '@/models/catalog';
 export function ChatSession({ entry }: { entry: CatalogEntry }) {
   const session = useLLMChatSession(entry.config);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [draft, setDraft] = useState('');
   const [generating, setGenerating] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const nextId = useRef(0);
 
-  const send = useCallback(async () => {
-    const text = draft.trim();
+  const send = useCallback(async (text: string) => {
     const sendMessage = session.sendMessage;
     if (!text || !sendMessage || generating) return;
 
@@ -25,7 +23,6 @@ export function ChatSession({ entry }: { entry: CatalogEntry }) {
       { id: userId, role: 'user', text },
       { id: replyId, role: 'assistant', text: '' },
     ]);
-    setDraft('');
     setSendError(null);
     setGenerating(true);
 
@@ -43,13 +40,11 @@ export function ChatSession({ entry }: { entry: CatalogEntry }) {
     } finally {
       setGenerating(false);
     }
-  }, [draft, generating, session.sendMessage]);
+  }, [generating, session.sendMessage]);
 
   return (
     <ChatView
       messages={messages}
-      draft={draft}
-      onChangeDraft={setDraft}
       onSend={send}
       onStop={() => session.stop?.()}
       generating={generating}

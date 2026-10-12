@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -17,9 +17,7 @@ import { useTheme } from '@/theme';
 
 type Props = {
   messages: ChatMessage[];
-  draft: string;
-  onChangeDraft: (text: string) => void;
-  onSend: () => void;
+  onSend: (text: string) => void;
   onStop?: () => void;
   generating: boolean;
   ready: boolean;
@@ -30,8 +28,6 @@ type Props = {
 
 export function ChatView({
   messages,
-  draft,
-  onChangeDraft,
   onSend,
   onStop,
   generating,
@@ -42,7 +38,25 @@ export function ChatView({
 }: Props) {
   const theme = useTheme();
   const inverted = useMemo(() => [...messages].reverse(), [messages]);
-  const canSend = ready && !generating && draft.trim().length > 0;
+  const inputRef = useRef<TextInput>(null);
+  const textRef = useRef('');
+  const [hasText, setHasText] = useState(false);
+  const canSend = ready && !generating && hasText;
+
+  const handleChangeText = (text: string) => {
+    textRef.current = text;
+    const next = text.trim().length > 0;
+    setHasText((prev) => (prev === next ? prev : next));
+  };
+
+  const submit = () => {
+    const text = textRef.current.trim();
+    if (!text || !canSend) return;
+    inputRef.current?.clear();
+    textRef.current = '';
+    setHasText(false);
+    onSend(text);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -90,12 +104,11 @@ export function ChatView({
             styles.input,
             { color: theme.text, borderColor: theme.separator, backgroundColor: theme.background },
           ]}
-          value={draft}
-          onChangeText={onChangeDraft}
+          ref={inputRef}
+          onChangeText={handleChangeText}
           placeholder="Message"
           placeholderTextColor={theme.secondary}
           multiline
-          editable={ready}
         />
         {generating ? (
           <Pressable
@@ -108,7 +121,7 @@ export function ChatView({
         ) : (
           <Pressable
             accessibilityLabel="Send message"
-            onPress={onSend}
+            onPress={submit}
             disabled={!canSend}
             style={[
               styles.sendButton,

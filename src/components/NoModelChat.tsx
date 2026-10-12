@@ -8,13 +8,9 @@ export const NO_MODEL_REPLY =
 
 export function NoModelChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [draft, setDraft] = useState('');
   const nextId = useRef(0);
 
-  const send = useCallback(() => {
-    const text = draft.trim();
-    if (!text) return;
-
+  const send = useCallback((text: string) => {
     const userId = `m${nextId.current++}`;
     const replyId = `m${nextId.current++}`;
     setMessages((prev) => [
@@ -22,14 +18,11 @@ export function NoModelChat() {
       { id: userId, role: 'user', text },
       { id: replyId, role: 'assistant', text: NO_MODEL_REPLY },
     ]);
-    setDraft('');
-  }, [draft]);
+  }, []);
 
   return (
     <ChatView
       messages={messages}
-      draft={draft}
-      onChangeDraft={setDraft}
       onSend={send}
       generating={false}
       ready
